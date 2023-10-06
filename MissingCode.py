@@ -1,110 +1,168 @@
+#Dealing with missing data
 import numpy as np
 import pandas as pd
 import missingno as msno
 import matplotlib.pyplot as plt
-class main_class:
-    def __init__ (self, file_Path):
-        self.data = file_Path
-        self.data = pd.read_csv(file_Path)
-        self.data.drop(self.data.columns[0], axis = 1 ,inplace = True)
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+
+class MainClass:
+    def __init__ (self, path):
+        self.path = path
+        self.data = pd.read_csv(self.path)
+        self.data.drop(self.data.columns[0], axis = 1 , inplace = True)
+        #Numerics all data and replaces the missing data with NAN
         for i in self.data.columns:
-            self.data[i] = pd.to_numeric(self.data[i], errors="coerce")    #Numerics all data and replaces it with 'NAN' if there are no value
-            a, b = self.data.shape
-        print(self.data)        
-class methods(main_class):                                                 #Inherit from the main class
-    def __init__ (self, file_Path):
-        main_class.__init__(self, file_Path)
-    def Del_rows(self):                                                    #Deletes the rows including NAN
-        a, b = self.data.shape
+            self.data[i] = pd.to_numeric(self.data[i], errors="coerce")     
+
+
+class Methods(MainClass):                                                 
+    def __init__ (self, path):
+        MainClass.__init__(self, path)
+        
+    #Deletes the rows including NAN
+    def delete_rows(self):
+        data = self.data.copy()                                                   
+        a, b = data.shape
         Rows = []
-        for i in range (a):
-            for j in range (b):
-                DData = self.data
-                if np.isnan(DData.loc[i][j] ) == True:
+        for i in range(a):
+            for j in range(b):
+                Data = data
+                if np.isnan(Data.loc[i][j]):
                     if i not in Rows:
                         Rows.append(i)
         for n in Rows:
-            self.data.drop(self.data.index[n], axis = 0, inplace = True)
-            for i in range (len(Rows)):
+            data.drop(data.index[n], axis = 0, inplace = True)
+            for i in range(len(Rows)):
                 Rows[i] = Rows[i] - 1
-        print(self.data)
-    def replacement_zero(self):                                             #replacing NAN with zero
-        a, b = self.data.shape   
-        for i in range (a):
-            for j in range (b):
-                if np.isnan(self.data.loc[i][j] ) == True:
-                    self.data.replace(self.data.loc[i][j], 0, inplace=True)
-        print(self.data)
-    def replacement_mean(self):                                             #replacing NAN with columns mean
-        a, b = self.data.shape
-        for i in range (a):
-            for j in range (b):
-                if np.isnan(self.data.loc[i][j]) == True:
-                    self.data[self.data.columns[j]].fillna(self.data[self.data.columns[j]].mean(), inplace = True)
-        print(self.data)
-    def replacement_median(self):                                           #replacing NAN with columns median
-        a, b = self.data.shape
-        for i in range (a):
-            for j in range (b):
-                if np.isnan(self.data.loc[i][j]) == True:
-                    self.data[self.data.columns[j]].fillna(self.data[self.data.columns[j]].median(), inplace = True)
-        print(self.data)
-    def replacement_mode(self):                                             #replacing NAN with columns mode
-        a, b = self.data.shape
-        for i in range (a):
-            for j in range (b):
-                if np.isnan(self.data.loc[i][j]) == True:
-                    self.data[self.data.columns[j]].fillna(self.data[self.data.columns[j]].mode()[0], inplace = True)
-        print(self.data)
-    def  forward_filling(self):                                              #forward-filling---The first row is filled using the last row's element
-        a, b = self.data.shape
-        for i in range (a):
-            for j in range (b):
-                if np.isnan(self.data.iloc[i, j]):
-                    self.data.iloc[i, j] = self.data.iloc[i-1, j]
-        print(self.data)
-    def backward_filling(self):                                              #backward-filling
-        a, b = self.data.shape
-        for j in range (b):
-            if np.isnan(self.data.iloc[a-1, j]):
-                self.data.iloc[a-1, j] = 0
-            for i in range (a-1):
-                for j in range (b):
-                    if np.isnan(self.data.iloc[i+1, j]) and np.isnan(self.data.iloc[i, j]):
-                        self.data.iloc[i, j] = 0
-                    elif np.isnan(self.data.iloc[i, j]):
-                        self.data.iloc[i, j] = self.data.iloc[i+1, j]
-        print(self.data)
-    def KNN_method(self):                                                    #KNN method
-        a, b = self.data.shape
+        return data
+
+    #replacing NAN with zero
+    def replacement_zero(self):                                             
+        data = self.data.copy()
+        a, b = data.shape   
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.loc[i][j]):
+                    data.replace(data.loc[i][j], 0, inplace=True)
+        return data
+
+    #replacing NAN with mean
+    def replacement_mean(self):                                             
+        data = self.data.copy()                                                
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.loc[i][j]):
+                    data[data.columns[j]].fillna(data[self.data.columns[j]].mean(), inplace = True)
+        return data
+
+    #replacing NAN with median
+    def replacement_median(self):                                           
+        data = self.data.copy()                                                  
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.loc[i][j]):
+                    data[data.columns[j]].fillna(data[data.columns[j]].median(), inplace = True)
+        return data
+
+    #replacing NAN with mode
+    def replacement_mode(self):                                            
+        data = self.data.copy()                                               
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.loc[i][j]):
+                    data[data.columns[j]].fillna(data[self.data.columns[j]].mode()[0], inplace = True)
+        return data
+
+    #forward-filling, The first row is filled using the last row's element
+    def forward_filling(self):                                              
+        data = self.data.copy()                                               
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.iloc[i, j]):
+                    data.iloc[i, j] = data.iloc[i-1, j]
+        return data
+
+    #backward-filling
+    def backward_filling(self):                                              
+        data = self.data.copy()                                                 
+        a, b = data.shape
+        for j in range(b):
+            if np.isnan(data.iloc[a-1, j]):
+                data.iloc[a-1, j] = 0
+            for i in range(a-1):
+                for j in range(b):
+                    if np.isnan(data.iloc[i+1, j]) and np.isnan(data.iloc[i, j]):
+                        data.iloc[i, j] = 0
+                    elif np.isnan(data.iloc[i, j]):
+                        data.iloc[i, j] = data.iloc[i+1, j]
+        return data
+
+        #neighbors, KNN method
+    def knn_method(self):                                                    
+        data = self.data.copy()                                                     
+        a, b = data.shape
         from sklearn.impute import KNNImputer
         imputer = KNNImputer(n_neighbors=3, weights="distance")
-        imp_data = imputer.fit_transform(self.data)
+        imp_data = imputer.fit_transform(data)
         Data_KNN = pd.DataFrame(imp_data)
-        print(Data_KNN)
-    def lin_reg(self):                                                       #linear regression -- for first and last row NAN replace with mean()
-        a, b = self.data.shape
-        for j in range (b):
-            if np.isnan(self.data.iloc[a-1, j]):
-                self.data.iloc[a-1, j] = self.data[self.data.columns[j]].mean()
-        for i in range (a-1):
-            for j in range (b):
-                if np.isnan(self.data.iloc[i+1, j]) and np.isnan(self.data.iloc[i, j]):
-                    self.data.iloc[i, j] = self.data[self.data.columns[j]].mean()
-                elif np.isnan(self.data.iloc[i, j]):
-                    self.data.iloc[i, j] = (self.data.iloc[i+1, j] + self.data.iloc[i-1, j])/2
-        print(self.data)
-    def Visualize_miss(self):                                                #Visualize missing value
-        a, b = self.data.shape
-        msno.matrix(self.data)
+        return Data_KNN
+
+    #linear regression
+    def linear_reg(self):                                                       
+        data = self.data.copy()                                                       
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.iloc[i, j]):
+                    x_values = data.dropna(subset = [data.columns[j]]).index.values.reshape(-1, 1)
+                    y_values = data.dropna(subset = [data.columns[j]])[data.columns[j]].values.reshape(-1, 1)
+
+                    model = np.polyfit(x_values.flatten(), y_values.flatten(), 1)
+                    predicted_value = np.polyval(model, i)
+                    data.iloc[i, j] = predicted_value
+        return data
+    #polynomial regression
+    def polynomial_reg(self):
+        data = self.data.copy()                                                         
+        a, b = data.shape
+        for i in range(a):
+            for j in range(b):
+                if np.isnan(data.iloc[i, j]):
+                    x_values = data.dropna(subset = [data.columns[j]]).index.values.reshape(-1, 1)
+                    y_values = data.dropna(subset = [data.columns[j]])[self.data.columns[j]].values.reshape(-1, 1)
+
+                    #polynomial regression, degree = 2
+                    poly = PolynomialFeatures(degree=2)
+                    x_poly = poly.fit_transform(x_values)
+            
+                    model = LinearRegression()
+                    model.fit(x_poly, y_values)
+            
+                    predicted_value = model.predict(poly.transform(np.array([[i]])))
+                    data.iloc[i, j] = predicted_value[0][0]
+        return data
+
+    #Visualize missing value
+    def visualize_nan(self):                                                
+        data = self.data.copy()                                                         
+        a, b = data.shape
+        msno.matrix(data)
         plt.show()
-        msno.heatmap(self.data)
+        msno.heatmap(data)
         plt.show()
-        msno.bar(self.data)
+        msno.bar(data)
         plt.show()
-    #def polynomial regression will be add
-test = methods('H://NISCO/codes/missed_value.csv')
-print(test.replacement_mean())
+
+
+test = Methods('../missed_value.csv')
+print(test.replacement_zero())
 
 
 
