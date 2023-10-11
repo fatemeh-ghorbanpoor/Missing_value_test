@@ -26,10 +26,6 @@ class MissingValue:
         self.path = path
         self.data = pd.read_csv(self.path)
         self.data.drop(self.data.columns[0], axis = 1 , inplace = True)
-        #Numerics all data and replaces the missing data with NAN
-        for columns in self.data.columns:
-            self.data[columns] = pd.to_numeric(self.data[columns], errors="coerce") 
-
 class MissingValueImputer(MissingValue):   
     """
     
@@ -210,7 +206,7 @@ class MissingValueImputer(MissingValue):
 
 
 test = MissingValueImputer('../MissingValue_data/missed_value.csv')
-print(test.k_nearest_neighbors_method(3))
+print(test)
 
 
 
