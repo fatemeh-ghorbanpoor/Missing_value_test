@@ -26,6 +26,10 @@ class MissingValue:
         self.path = path
         self.data = pd.read_csv(self.path)
         self.data.drop(self.data.columns[0], axis = 1 , inplace = True)
+        print(self.data)
+        #delete unnamed columns
+        self.data = self.data.iloc[:, ~self.data.columns.str.contains('Unnamed', case=False)]
+        print(self.data)
 class MissingValueImputer(MissingValue):   
     """
     
