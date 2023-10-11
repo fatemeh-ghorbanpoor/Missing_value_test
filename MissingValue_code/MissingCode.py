@@ -142,12 +142,13 @@ class MissingValueImputer(MissingValue):
         return data
 
         #neighbors, KNN method
-    def k_nearest_neighbors_method(self):    
+    def k_nearest_neighbors_method(self, number_of_neighbors):    
         """
         
         """                                                
+        self.neighbors = number_of_neighbors
         data = self.data.copy()                                                     
-        knnimputer = KNNImputer(n_neighbors=3, weights="distance")
+        knnimputer = KNNImputer(n_neighbors=number_of_neighbors, weights="distance")
         imp_data = knnimputer.fit_transform(data)
         knn_model = pd.DataFrame(imp_data)
         return knn_model
@@ -170,10 +171,11 @@ class MissingValueImputer(MissingValue):
                     data.iloc[row_index, column_index] = predicted_value
         return data
     #polynomial regression
-    def polynomial_regression(self):
+    def polynomial_regression(self, degree):
         """
         
         """
+        self.degree = degree
         data = self.data.copy()                                                         
         row_count, column_count = data.shape
         for row_index in range(row_count):
@@ -182,14 +184,14 @@ class MissingValueImputer(MissingValue):
                     x_values = data.dropna(subset = [data.columns[column_index]]).index.values.reshape(-1, 1)
                     y_values = data.dropna(subset = [data.columns[column_index]])[self.data.columns[column_index]].values.reshape(-1, 1)
 
-                    #polynomial regression, degree = 2
-                    poly_feature = PolynomialFeatures(degree=2)
+                    
+                    poly_feature = PolynomialFeatures(degree)
                     x_poly = poly_feature.fit_transform(x_values)
             
                     lin_reg = LinearRegression()
                     lin_reg.fit(x_poly, y_values)
             
-                    predicted_value = lin_reg.predict(poly.transform(np.array([[row_index]])))
+                    predicted_value = lin_reg.predict(poly_feature.transform(np.array([[row_index]])))
                     data.iloc[row_index, column_index] = predicted_value[0][0]
         return data
 
@@ -208,7 +210,7 @@ class MissingValueImputer(MissingValue):
 
 
 test = MissingValueImputer('../MissingValue_data/missed_value.csv')
-print(test.polynomial_regression())
+print(test.k_nearest_neighbors_method(3))
 
 
 
